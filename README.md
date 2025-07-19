@@ -36,6 +36,16 @@
 - Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
     - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
 
+## Funcationality
+
+- Update destination folder in real time for directory and file events:
+    - Added
+    - Deleted
+    - Updated
+    - Moved
+- Startup Behaviour
+    - Copy source directory to destination.
+
 ## Known Problems
 
 ## Notes / Thought Process

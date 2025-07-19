@@ -17,13 +17,21 @@ async def root():
 
 
 def parseArguments():
-     # Setup Argument Parsing for our destination filepath  
+    
+    # Check that the correct number of arguments have been passed
+    
+    # Setup Argument Parsing for our destination filepath  
     parser = argparse.ArgumentParser()
     parser.add_argument('-path')
     
     # Input sanitation??????
     args = parser.parse_args()
+    
     directoryPath = args.path
+    
+    # Check that Arguments were actually passed
+    if directoryPath is None:
+        raise ValueError("Bad Arguments passed please use: -path pathName")
     
     # Error handling for provided directory
     try:
