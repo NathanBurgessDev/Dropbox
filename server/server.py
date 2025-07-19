@@ -33,7 +33,7 @@ def parseArguments():
             raise FileNotFoundError("Directory at: \"" + directoryPath + "\" cannot be found")
     # Exceptions for os.path.exists() 
     except PermissionError:
-        raise PermissionError("os.path.exists() failed: pleasure ensure permissions to execute os.stat() are granted on the supplied directory.\nPlease see:https://docs.python.org/dev/library/os.path.html#os.path.isdir for help")
+        raise PermissionError("os.path.isdir() failed: pleasure ensure permissions to execute os.stat() are granted on the supplied directory.\nPlease see:https://docs.python.org/dev/library/os.path.html#os.path.isdir for help")
         
     # Permissions exceptions - shouldn't need execute permissions? 
     # May require execute in the future for checking destination directory is the same as source
