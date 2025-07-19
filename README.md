@@ -4,6 +4,11 @@
 - Comparing a hash of all values within the directory (slow)
 - watchdog - provides directory monitoring with eventhandlers for file system events
 - Flask / FastAPI
+- File events:
+    - Added
+    - Deleted
+    - Updated
+    - Moved
 
 ## How it was built
 
@@ -21,17 +26,15 @@
 
 ## Assumptions and Limitations
 
+- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suit - testing performed as the project is built.
 - Following the description directly this is a one way sync - we're not concerned about there being "extra" files in the destination directory - if there are we leave them alone or overwrite them in the case of a conflict.
 - Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
-    - Could be solved with some kind of hash or comparing os.stats in some way
-- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suit - testing performed as the project is built.
+    - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
 - Evidence of different things tested to find limits - file sizes - path lengths (Windows :( ) - non ascii text - weird file types.
 
 ## Known Problems
 
-## Thought Process
-
-As the intent of this is to observe how I work I believe leaving a section for notes / general thoughts may be useful.
+## Notes / Thought Process
 
 - First time using FastAPI - bit of a learning curve.
 - Little and often approach
