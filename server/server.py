@@ -15,11 +15,16 @@ async def root():
 # async def startup_event():
 #     print("App Started")
 
-
+"""
+    Checks the arguments passed and performs error checking:
+        Correct arguments passed (an argument was parsed and the correct flag(s) were used)
+        Checks the provided directory is valid and reachable
+        Checks the provided directy has read and write permissions for the user running the program
+    
+    If we were being pedantic we may move the error checking to a separate "checkDirectory" function.
+"""
 def parseArguments():
-    
-    # Check that the correct number of arguments have been passed
-    
+
     # Setup Argument Parsing for our destination filepath  
     parser = argparse.ArgumentParser()
     parser.add_argument('-path')
@@ -39,7 +44,7 @@ def parseArguments():
             print("Directory at: " + directoryPath + " found")
         else:
             raise FileNotFoundError("Directory at: \"" + directoryPath + "\" cannot be found")
-    # Exceptions for os.path.exists() 
+    # Exceptions for os.path.isdir() 
     except PermissionError:
         raise PermissionError("os.path.isdir() failed: pleasure ensure permissions to execute os.stat() are granted on the supplied directory.\nPlease see:https://docs.python.org/dev/library/os.path.html#os.path.isdir for help")
         
