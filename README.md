@@ -28,7 +28,11 @@
 
 The server will accept a directory path supplied after the `-path` flag.
 
-```python.exe server/server.py -path "directoryPath" ```
+The file is located at ```server/server.py```.
+
+```
+python.exe server/server.py -path "directoryPath" 
+```
 
 ### Client
 
