@@ -25,7 +25,7 @@ class MyEventHandler(FileSystemEventHandler):
             print(event)
             destinationPath = stripPath(event.src_path, topLevelDir)
             print(destinationPath)
-            dataPath = {"destination": str(destinationPath)}
+            dataPath = {"subPath": str(destinationPath)}
             try:
                 files = {"file": open(event.src_path, "rb")}
             except:

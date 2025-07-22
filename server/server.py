@@ -1,11 +1,28 @@
-import uvicorn, os
+import uvicorn, os, shutil
 from fastapi import FastAPI, UploadFile, File, Form, Depends
 from pathlib import Path
 from dependencies.util import parseArguments
 
-
 # Globals - Probably nicer to use some object or singleton in a larger codebase
 app: FastAPI = FastAPI()
+
+
+# Function to be overriden for dependency injection
+# Useful for testing
+def getDestination():
+    return
+
+
+def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
+    destinationPath = Path(fullDestination) / subPath
+
+    # Check if the parent directory exists - if not then create it
+    destinationPath.parent.mkdir(parents=True, exist_ok=True)
+
+    with destinationPath.open("wb") as buffer:
+        shutil.copyfileobj(uploadFile.file, buffer)
+
+    return
 
 
 @app.get("/")
@@ -20,14 +37,24 @@ async def root():
 # It also saves us from needing to do the chunking manually
 # https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi
 # Further reading on `shutil`: https://stackoverflow.com/questions/67732361/python-read-write-vs-shutil-copy/73365632#73365632
-# If `shutil` proves to be difficult to work with I can do manual chunking as shown here:
+# If `shutil` proves to be difficult to work with I can do manual chunking.
 @app.post("/uploadfile")
 async def create_upload_file(
-    file: UploadFile = File(...), destination: str = Form(...)
+    file: UploadFile = File(...),
+    subPath: str = Form(...),
+    fullDestination: str = Depends(getDestination),
 ):
     print(file)
-    print(destination)
-    return {"filename": file.filename}
+    print(subPath)
+    print(fullDestination)
+
+    saveFile(file, subPath, fullDestination)
+
+    return {
+        "filename": file.filename,
+        "subPath": subPath,
+        "fullDestination": fullDestination,
+    }
 
 
 # On Event is Deprecated - use Lifespan Event Handlers instead :
@@ -41,6 +68,8 @@ if __name__ == "__main__":
     destination = parseArguments()
     topLevelDir = Path(destination).name
     print(topLevelDir)
+
+    app.dependency_overrides[getDestination] = lambda: destination
 
     # Start the application
     uvicorn.run(app)

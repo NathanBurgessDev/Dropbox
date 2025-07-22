@@ -34,7 +34,7 @@ The server will accept a directory path supplied after the `-path` flag.
 The file is located at `server/server.py`.
 
 ```
-python.exe -m server.server -path "destinationPath" 
+python -m server.server -path "destinationPath" 
 ```
 
 ### Client
