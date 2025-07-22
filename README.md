@@ -9,6 +9,11 @@
 - Startup Behaviour
     - Copy source directory to destination.
 
+## Future Functionality to consider
+
+- Logging
+- API key validation
+
 
 ## How it was built
 
@@ -29,11 +34,14 @@ The server will accept a directory path supplied after the `-path` flag.
 The file is located at `server/server.py`.
 
 ```
-python.exe server/server.py -path "directoryPath" 
+python.exe -m server.server -path "destinationPath" 
 ```
 
 ### Client
 
+```
+python -m client.client -path "sourcePath"
+```
 
 ## Assumptions and Limitations
 
@@ -66,6 +74,7 @@ Some notes I made during the development process
     - Added
     - Deleted
     - Updated
+    - Renamed
     - Moved
 - Startup behaviour options:
     1. Do Nothing and wait for a observed change.
@@ -73,3 +82,4 @@ Some notes I made during the development process
     3. Sync request to compare source to destination and ammend differences.
 - Large files (> available memory) may be problematic - research
     
+- Empty directories???????????????????
