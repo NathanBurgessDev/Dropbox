@@ -4,12 +4,12 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileMovedEv
 from watchdog.observers import Observer
 from dependencies.util import parseArguments, stripPath
 
-# Globals:
-source: str
-topLevelDir: str
-
 
 class MyEventHandler(FileSystemEventHandler):
+    def __init__(self, topLevelDirectory: str):
+        super().__init__()
+        self.topLevelDir = topLevelDirectory
+
     # def on_any_event(self, event: FileSystemEvent) -> None:
     #     print(event)
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     topLevelDir = Path(source).name
     print(topLevelDir)
 
-    event_handler = MyEventHandler()
+    event_handler = MyEventHandler(topLevelDir)
     observer = Observer()
     observer.schedule(event_handler=event_handler, path=source, recursive=True)
     observer.start()
