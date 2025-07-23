@@ -1,9 +1,9 @@
 import uvicorn, os, shutil
-from fastapi import FastAPI, UploadFile, File, Form, Depends
+from fastapi import FastAPI, UploadFile, File, Form, Depends, Query
 from pathlib import Path
 from dependencies.util import parseArguments
 
-# Globals - Probably nicer to use some object or singleton in a larger codebase
+# Globals - don't like this but FastAPI has forced my hand
 app: FastAPI = FastAPI()
 
 
@@ -13,6 +13,8 @@ def getDestination():
     return
 
 
+# Potentially rework for async - not particularly familar with FastAPI in this format
+# Works for now
 def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
@@ -21,6 +23,17 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
 
     with destinationPath.open("wb") as buffer:
         shutil.copyfileobj(uploadFile.file, buffer)
+
+    return
+
+
+def deleteFile(subPath: str, fullDestination: str):
+    destinationPath = Path(fullDestination) / subPath
+
+    if os.path.exists(destinationPath):
+        os.remove(destinationPath)
+    else:
+        print("File does not exist: " + str(destinationPath))
 
     return
 
@@ -39,7 +52,7 @@ async def root():
 # Further reading on `shutil`: https://stackoverflow.com/questions/67732361/python-read-write-vs-shutil-copy/73365632#73365632
 # If `shutil` proves to be difficult to work with I can do manual chunking.
 @app.post("/uploadfile")
-async def create_upload_file(
+async def createUploadFileEndpoint(
     file: UploadFile = File(...),
     subPath: str = Form(...),
     fullDestination: str = Depends(getDestination),
@@ -57,6 +70,18 @@ async def create_upload_file(
     }
 
 
+@app.delete("/deletefile")
+async def deleteFileEndpoint(
+    subPath: str = Query(...),
+    fullDestination: str = Depends(getDestination),
+):
+    deleteFile(subPath, fullDestination)
+    return {
+        "subPath": subPath,
+        "fullDestination": fullDestination,
+    }
+
+
 # On Event is Deprecated - use Lifespan Event Handlers instead :
 # https://fastapi.tiangolo.com/advanced/events/
 # @app.on_event("startup")
@@ -69,6 +94,8 @@ if __name__ == "__main__":
     topLevelDir = Path(destination).name
     print(topLevelDir)
 
+    # Overriding our dummy getDestination function so we can inject the destination
+    # To our fastAPI functions
     app.dependency_overrides[getDestination] = lambda: destination
 
     # Start the application

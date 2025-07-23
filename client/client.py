@@ -24,7 +24,6 @@ class MyEventHandler(FileSystemEventHandler):
             print("FILE CREATED ")
             print(event)
             destinationPath = stripPath(event.src_path, topLevelDir)
-            print(destinationPath)
             dataPath = {"subPath": str(destinationPath)}
             try:
                 files = {"file": open(event.src_path, "rb")}
@@ -39,15 +38,33 @@ class MyEventHandler(FileSystemEventHandler):
         return super().on_created(event)
 
     def on_deleted(self, event):
-        print("FILE DELETED ")
-        print(event)
+        if not (event.is_directory):
+            print("FILE DELETED ")
+            print(event)
+
+            destinationPath = stripPath(event.src_path, topLevelDir)
+            dataPath = {"subPath": str(destinationPath)}
+            r = httpx.delete("http://localhost:8000/deletefile", params=dataPath)
+            print(r.text)
         return super().on_deleted(event)
 
     # ignore DirModifiedEvent - can be fired with non changes
-    #
     def on_modified(self, event):
-        print("FILE MODIFIED ")
-        print(event)
+        if not (event.is_directory):
+            print("FILE MODIFIED ")
+            print(event)
+            destinationPath = stripPath(event.src_path, topLevelDir)
+            dataPath = {"subPath": str(destinationPath)}
+            try:
+                files = {"file": open(event.src_path, "rb")}
+            except:
+                print("File failed to open")
+            print(files)
+            r = httpx.post(
+                "http://localhost:8000/uploadfile", files=files, data=dataPath
+            )
+            print(r.text)
+            files["file"].close()
         return super().on_modified(event)
 
 
