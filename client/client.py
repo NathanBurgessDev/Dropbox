@@ -13,15 +13,32 @@ class MyEventHandler(FileSystemEventHandler):
 
     def sendFile(self, dataPath, srcPath):
         try:
-            files = {"file": open(srcPath, "rb")}
-        except:
-            print("File failed to open")
-        print(files)
-        r = self.client.post(
-            "http://localhost:8000/uploadfile", files=files, data=dataPath
-        )
-        print(r.text)
-        files["file"].close()
+            fileSize = Path(srcPath).stat().st_size
+            filename = Path(srcPath).name
+
+            # Small file < 10_000 bytes — read into memory
+            if fileSize < 10_000:
+                with open(srcPath, "rb") as f:
+                    fileBytes = f.read()
+                files = {"file": (filename, fileBytes)}
+                print(f"Sending Small file: {filename} ({fileSize} bytes)")
+                r = self.client.post(
+                    "http://localhost:8000/uploadfile", files=files, data=dataPath
+                )
+                print(r.status_code, r.text)
+
+            # Large file >= 10_000 bytes — stream it
+            else:
+                with open(srcPath, "rb") as f:
+                    files = {"file": (filename, f)}
+                    print(f"Sending Large file: {filename} ({fileSize} bytes)")
+                    r = self.client.post(
+                        "http://localhost:8000/uploadfile", files=files, data=dataPath
+                    )
+                print(r.status_code, r.text)
+
+        except Exception as e:
+            print(f"Error sending file: {e}")
         return
 
     # def on_any_event(self, event: FileSystemEvent) -> None:

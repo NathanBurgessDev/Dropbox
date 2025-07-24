@@ -18,7 +18,8 @@
 ## How it was built
 
 - `FastAPI` with `Uvicorn` - handles async, deployment is easier with the ASGI from uvicorn - should allow for easier scaling as a result.
-- `Watchdog` https://pypi.org/project/watchdog/ For directory monitoring.
+- `Watchdog` https://pypi.org/project/watchdog/ for directory monitoring.
+    - Creates an observer thread that fires when various directory changes occur
 - `httpx` - as `requests` is a synchronous library.
     - If we were to add API calls to `server.py`, `httpx` would need to be used - it would be sensible to use the same tooling for both client and server where possible.
     - This is subject to httpx being a pain to use or not
