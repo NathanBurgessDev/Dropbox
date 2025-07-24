@@ -22,6 +22,7 @@
 - `httpx` - as `requests` is a synchronous library.
     - If we were to add API calls to `server.py`, `httpx` would need to be used - it would be sensible to use the same tooling for both client and server where possible.
     - This is subject to httpx being a pain to use or not
+    - Shared `httpx` client to prevent creation of new connections
 
 ## Usage Guide
 

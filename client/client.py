@@ -6,9 +6,23 @@ from dependencies.util import parseArguments, stripPath
 
 
 class MyEventHandler(FileSystemEventHandler):
-    def __init__(self, topLevelDirectory: str):
+    def __init__(self, topLevelDirectory: str, client: httpx.Client):
         super().__init__()
         self.topLevelDir = topLevelDirectory
+        self.client = client
+
+    def sendFile(self, dataPath, srcPath):
+        try:
+            files = {"file": open(srcPath, "rb")}
+        except:
+            print("File failed to open")
+        print(files)
+        r = self.client.post(
+            "http://localhost:8000/uploadfile", files=files, data=dataPath
+        )
+        print(r.text)
+        files["file"].close()
+        return
 
     # def on_any_event(self, event: FileSystemEvent) -> None:
     #     print(event)
@@ -25,16 +39,7 @@ class MyEventHandler(FileSystemEventHandler):
             print(event)
             destinationPath = stripPath(event.src_path, topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
-            try:
-                files = {"file": open(event.src_path, "rb")}
-            except:
-                print("File failed to open")
-            print(files)
-            r = httpx.post(
-                "http://localhost:8000/uploadfile", files=files, data=dataPath
-            )
-            print(r.text)
-            files["file"].close()
+            self.sendFile(dataPath=dataPath, srcPath=event.src_path)
         return super().on_created(event)
 
     def on_deleted(self, event):
@@ -44,7 +49,7 @@ class MyEventHandler(FileSystemEventHandler):
 
             destinationPath = stripPath(event.src_path, topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
-            r = httpx.delete("http://localhost:8000/deletefile", params=dataPath)
+            r = self.client.delete("http://localhost:8000/deletefile", params=dataPath)
             print(r.text)
         return super().on_deleted(event)
 
@@ -58,26 +63,16 @@ class MyEventHandler(FileSystemEventHandler):
     # Our http request expects a smaller file than has been provided by the stream
     # How do we solve this???
     # 1. Ignore support for larger files and load the file into memory
-    # 2. Catch the error and keep trying until it works
+    # 2. Catch the error and keep trying until it works - a bit of a jank solution tbh
     # 3. Create a copy of the file elsewhere and upload that - time + storage intensive
-    # 4. Lock the file - reaaaaaly janky and likely to be very painful
+    # 4. Lock the file - reaaaaaly janky and likely to be very very very painful
     def on_modified(self, event):
         if not (event.is_directory):
             print("FILE MODIFIED ")
             print(event)
             destinationPath = stripPath(event.src_path, topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
-            try:
-                files = {"file": open(event.src_path, "rb")}
-            except:
-                print("File failed to open")
-                return
-            print(files)
-            r = httpx.post(
-                "http://localhost:8000/uploadfile", files=files, data=dataPath
-            )
-            print(r.text)
-            files["file"].close()
+            self.sendFile(dataPath=dataPath, srcPath=event.src_path)
         return super().on_modified(event)
 
 
@@ -87,17 +82,18 @@ if __name__ == "__main__":
     topLevelDir = Path(source).name
     print(topLevelDir)
 
-    event_handler = MyEventHandler(topLevelDir)
-    observer = Observer()
-    observer.schedule(event_handler=event_handler, path=source, recursive=True)
-    observer.start()
+    with httpx.Client() as client:
+        event_handler = MyEventHandler(topLevelDirectory=topLevelDir, client=client)
+        observer = Observer()
+        observer.schedule(event_handler=event_handler, path=source, recursive=True)
+        observer.start()
 
-    try:
-        while observer.is_alive():
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt received.")
-        observer.stop()
-    observer.join()
+        try:
+            while observer.is_alive():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("KeyboardInterrupt received.")
+            observer.stop()
+        observer.join()
 
-    exit(0)
+        exit(0)
