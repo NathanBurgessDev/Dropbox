@@ -1,5 +1,5 @@
 import uvicorn, os, shutil
-from fastapi import FastAPI, UploadFile, File, Form, Depends, Query
+from fastapi import FastAPI, UploadFile, File, Form, Depends, Query, HTTPException
 from pathlib import Path
 from dependencies.util import parseArguments
 
@@ -80,6 +80,32 @@ async def deleteFileEndpoint(
         "subPath": subPath,
         "fullDestination": fullDestination,
     }
+
+
+@app.put("/renamefile")
+async def renameFileEndpoint(
+    oldSubPath: str = Form(...),
+    newSubPath: str = Form(...),
+    fullDestination: str = Depends(getDestination),
+):
+    oldPath = Path(fullDestination) / oldSubPath
+    newPath = Path(fullDestination) / newSubPath
+
+    if not oldPath.exists():
+        raise HTTPException(status_code=404, detail=f"Source file not found: {oldPath}")
+
+    # Create parent directories if needed
+    newPath.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        shutil.move(str(oldPath), str(newPath))
+        return {
+            "oldPath": oldPath,
+            "newPath": newPath,
+            "fullDestination": fullDestination,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Rename failed: {e}")
 
 
 # On Event is Deprecated - use Lifespan Event Handlers instead :

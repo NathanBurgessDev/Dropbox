@@ -16,7 +16,7 @@ class MyEventHandler(PatternMatchingEventHandler):
                 "*/temp/*",  # Any temp folder in path
                 "*/tmp/*",  # Any tmp folder in path
             ],
-            ignore_directories=True,
+            ignore_directories=False,
             case_sensitive=False,
         )
         self.topLevelDir = topLevelDirectory
@@ -61,8 +61,6 @@ class MyEventHandler(PatternMatchingEventHandler):
 
         except Exception as e:
             print(f"Error sending file: {e}")
-        finally:
-            tempCopyPath.unlink(missing_ok=True)
         return
 
     # def on_any_event(self, event: FileSystemEvent) -> None:
@@ -70,8 +68,22 @@ class MyEventHandler(PatternMatchingEventHandler):
 
     # Despite being called "on_moved" this refers to when a file is *renamed*
     def on_moved(self, event):
-        print("FILE MOVED")
-        print(event)
+        if not (event.is_directory):
+            print("FILE MOVED")
+            print(event)
+            oldPath = stripPath(event.src_path, self.topLevelDir)
+            newPath = stripPath(event.dest_path, self.topLevelDir)
+
+            data = {
+                "oldSubPath": str(oldPath),
+                "newSubPath": str(newPath),
+            }
+
+            try:
+                r = self.client.put("http://localhost:8000/renamefile", data=data)
+                print(r.status_code, r.text)
+            except Exception as e:
+                print(f"Error sending rename request: {e}")
         return super().on_moved(event)
 
     def on_created(self, event):
