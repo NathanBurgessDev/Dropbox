@@ -1,22 +1,34 @@
-import httpx, time
+import httpx, time, tempfile, shutil
 from pathlib import Path
-from watchdog.events import FileSystemEvent, FileSystemEventHandler, FileMovedEvent
+from watchdog.events import FileSystemEvent, PatternMatchingEventHandler, FileMovedEvent
 from watchdog.observers import Observer
 from dependencies.util import parseArguments, stripPath
 
 
-class MyEventHandler(FileSystemEventHandler):
+class MyEventHandler(PatternMatchingEventHandler):
     def __init__(self, topLevelDirectory: str, client: httpx.Client):
-        super().__init__()
+        super().__init__(
+            ignore_patterns=[
+                "*.tmp",  # Common Windows temp file pattern
+                "~*",  # Backup temp files
+                "*.swp",  # Vim swap files
+                "*.temp",  # General temp file extension
+                "*/temp/*",  # Any temp folder in path
+                "*/tmp/*",  # Any tmp folder in path
+            ],
+            ignore_directories=True,
+            case_sensitive=False,
+        )
         self.topLevelDir = topLevelDirectory
         self.client = client
 
+    # https://github.com/syncthing/syncthing - A similar Open Source Project - creates a copy of the file and then uploads that
     def sendFile(self, dataPath, srcPath):
         try:
             fileSize = Path(srcPath).stat().st_size
             filename = Path(srcPath).name
 
-            # Small file < 10_000 bytes — read into memory
+            # Small file < 10_000 bytes —> read into memory
             if fileSize < 10_000:
                 with open(srcPath, "rb") as f:
                     fileBytes = f.read()
@@ -27,9 +39,17 @@ class MyEventHandler(FileSystemEventHandler):
                 )
                 print(r.status_code, r.text)
 
-            # Large file >= 10_000 bytes — stream it
+            # Large file >= 10_000 bytes —> stream it
+            # To solve a race condition with streamed files where the file grows or shrinks during sending
+            # resulting in a "h11._util.LocalProtcolError: Too much / Too Little data for declared Content-Length"
+            # We create a temp copy of the large file, upload the copy, and then delete the temp file
             else:
-                with open(srcPath, "rb") as f:
+                # delete=False here is needed as default behaviour has the tempfile delete when close() is called
+                with tempfile.NamedTemporaryFile(delete=False) as tmp:
+                    tempCopyPath = Path(tmp.name)
+                # .copy2 will attempt to preserve file metadata where possible
+                shutil.copy2(srcPath, tempCopyPath)
+                with open(tempCopyPath, "rb") as f:
                     files = {"file": (filename, f)}
                     print(f"Sending Large file: {filename} ({fileSize} bytes)")
                     r = self.client.post(
@@ -37,8 +57,12 @@ class MyEventHandler(FileSystemEventHandler):
                     )
                 print(r.status_code, r.text)
 
+                tempCopyPath.unlink(missing_ok=True)
+
         except Exception as e:
             print(f"Error sending file: {e}")
+        finally:
+            tempCopyPath.unlink(missing_ok=True)
         return
 
     # def on_any_event(self, event: FileSystemEvent) -> None:
@@ -83,6 +107,7 @@ class MyEventHandler(FileSystemEventHandler):
     # 2. Catch the error and keep trying until it works - a bit of a jank solution tbh
     # 3. Create a copy of the file elsewhere and upload that - time + storage intensive
     # 4. Lock the file - reaaaaaly janky and likely to be very very very painful
+    # https://github.com/syncthing/syncthing - A similar Open Source Project - creates a copy of the file and then uploads that
     def on_modified(self, event):
         if not (event.is_directory):
             print("FILE MODIFIED ")
