@@ -27,13 +27,18 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
     return
 
 
-def deleteFile(subPath: str, fullDestination: str):
+def deleteFileOrDirectory(subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
     if os.path.exists(destinationPath):
-        os.remove(destinationPath)
+        if destinationPath.is_file():
+            os.remove(destinationPath)
+        elif destinationPath.is_dir():
+            shutil.rmtree(destinationPath)
+        else:
+            print("Unsupported file type for deletion:", destinationPath)
     else:
-        print("File does not exist: " + str(destinationPath))
+        print("File does not exist: ", destinationPath)
 
     return
 
@@ -75,11 +80,34 @@ async def deleteFileEndpoint(
     subPath: str = Query(...),
     fullDestination: str = Depends(getDestination),
 ):
-    deleteFile(subPath, fullDestination)
+    deleteFileOrDirectory(subPath, fullDestination)
     return {
         "subPath": subPath,
         "fullDestination": fullDestination,
     }
+
+
+# On a windows implementation this will never be called due to Windows not differenciating between a deleted directory or a deleted file
+@app.delete("/deletedirectory")
+async def deleteDirectoryEndpoint(
+    subPath: str = Query(...),
+    fullDestination: str = Depends(getDestination),
+):
+    dirPath = Path(fullDestination) / subPath
+
+    if dirPath.exists() and dirPath.is_dir():
+        try:
+            shutil.rmtree(dirPath)
+            return {
+                "message": f"Directory deleted at '{subPath}'",
+                "fullDestination": fullDestination,
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Directory deletion failed: {e}"
+            )
+    else:
+        raise HTTPException(status_code=404, detail=f"Directory not found: {dirPath}")
 
 
 @app.put("/renamefile")

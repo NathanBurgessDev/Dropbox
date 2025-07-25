@@ -125,15 +125,30 @@ class MyEventHandler(PatternMatchingEventHandler):
                 print(f"Error sending directory creation request: {e}")
         return super().on_created(event)
 
+    # Another interesting bug - this time windows related
+    # Windows does not differenciate between a file deletion and a directory deletion
+    # It only uses FileDeletedEvent for both
+    # https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats
+    # from the watchdog documentation : Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.
+    # Naturally this isnt included in the documentation of `on_deleted`
     def on_deleted(self, event):
+        destinationPath = stripPath(event.src_path, topLevelDir)
+        dataPath = {"subPath": str(destinationPath)}
         if not (event.is_directory):
             print("FILE DELETED ")
             print(event)
-
-            destinationPath = stripPath(event.src_path, topLevelDir)
-            dataPath = {"subPath": str(destinationPath)}
             r = self.client.delete("http://localhost:8000/deletefile", params=dataPath)
             print(r.text)
+        else:
+            print("DIRECTORY DELETED")
+            print(event)
+            try:
+                r = self.client.delete(
+                    "http://localhost:8000/deletedirectory", params=dataPath
+                )
+                print(r.status_code, r.text)
+            except Exception as e:
+                print(f"Error sending directory deletion request: {e}")
         return super().on_deleted(event)
 
     # ignore DirModifiedEvent - can be fired with non changes

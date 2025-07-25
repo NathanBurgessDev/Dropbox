@@ -58,8 +58,6 @@ def parseArguments():
             'No write permissions for directory at: "' + directoryPath + '"  '
         )
 
-    # Kinda jank to do this here but idk man
-
     return directoryPath
 
 

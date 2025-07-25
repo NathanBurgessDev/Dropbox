@@ -7,7 +7,7 @@
     - Updated
     - Moved
 - Startup Behaviour
-    - Copy source directory to destination.
+    - Assumes empty source and destination directory
 
 ## Future Functionality to consider
 
@@ -52,9 +52,10 @@ python -m client.client -path "sourcePath"
 - Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
     - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
 - Client and server are on the same localhost - CORS could be a problem.
-- Some file editors will create temporary files in a directory when they are edited - will ignore files starting with `.` for example `.word`.
+- Some file editors will create temporary files in a directory when they are edited.
 
 ## Known Problems
+- Windows reports directory deletion as file deletion??????
 
 ## Notes / Thought Process
 
