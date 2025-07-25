@@ -84,6 +84,26 @@ class MyEventHandler(PatternMatchingEventHandler):
                 print(r.status_code, r.text)
             except Exception as e:
                 print(f"Error sending rename request: {e}")
+        else:
+            print("DIRECTORY MOVED")
+            print(event)
+
+            oldPath = stripPath(event.src_path, self.topLevelDir)
+            newPath = stripPath(event.dest_path, self.topLevelDir)
+
+            data = {
+                "oldSubPath": str(oldPath),
+                "newSubPath": str(newPath),
+            }
+
+            try:
+                response = self.client.put(
+                    "http://localhost:8000/renamedirectory", data=data
+                )
+                print(response.status_code, response.text)
+            except Exception as e:
+                print(f"Error sending directory rename request: {e}")
+
         return super().on_moved(event)
 
     def on_created(self, event):
@@ -93,6 +113,16 @@ class MyEventHandler(PatternMatchingEventHandler):
             destinationPath = stripPath(event.src_path, topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
             self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+        else:
+            print("DIRECTORY CREATED")
+            print(event)
+            subPath = stripPath(event.src_path, self.topLevelDir)
+            data = {"subPath": str(subPath)}
+            try:
+                r = self.client.post("http://localhost:8000/createdirectory", data=data)
+                print(r.status_code, r.text)
+            except Exception as e:
+                print(f"Error sending directory creation request: {e}")
         return super().on_created(event)
 
     def on_deleted(self, event):

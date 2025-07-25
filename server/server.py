@@ -108,6 +108,60 @@ async def renameFileEndpoint(
         raise HTTPException(status_code=500, detail=f"Rename failed: {e}")
 
 
+@app.put("/renamedirectory")
+async def renameDirectoryEndpoint(
+    oldSubPath: str = Form(...),
+    newSubPath: str = Form(...),
+    fullDestination: str = Depends(getDestination),
+):
+    oldDirPath = Path(fullDestination) / oldSubPath
+    newDirPath = Path(fullDestination) / newSubPath
+
+    if not oldDirPath.exists() or not oldDirPath.is_dir():
+        raise HTTPException(
+            status_code=404, detail=f"Source directory not found: {oldDirPath}"
+        )
+
+    try:
+        newDirPath.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(oldDirPath), str(newDirPath))
+        return {
+            "oldDirPath": oldDirPath,
+            "newDirPath": newDirPath,
+            "fullDestination": fullDestination,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Directory rename failed: {e}")
+
+
+@app.post("/createdirectory")
+async def createDirectoryEndpoint(
+    subPath: str = Form(...),
+    fullDestination: str = Depends(getDestination),
+):
+    dirPath = Path(fullDestination) / subPath
+
+    try:
+        if dirPath.exists():
+            if dirPath.is_dir():
+                return {"message": f"Directory already exists: {dirPath}"}
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"A file exists at the directory path: {dirPath}",
+                )
+
+        dirPath.mkdir(parents=True, exist_ok=False)
+
+        return {
+            "message": f"Directory created at '{subPath}'",
+            "fullDestination": fullDestination,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Directory creation failed: {e}")
+
+
 # On Event is Deprecated - use Lifespan Event Handlers instead :
 # https://fastapi.tiangolo.com/advanced/events/
 # @app.on_event("startup")
