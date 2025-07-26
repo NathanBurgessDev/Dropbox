@@ -30,7 +30,7 @@
 - Designed to be Linux + Windows compatabale 
     - Suggested to use Windows
     - Linux compatability not tested
-- `CD` into the top level directory
+- `Cd` into the top level directory
     - i.e. ...\DropBox
 
 ### Environment
@@ -59,11 +59,11 @@ python -m client.client -path "sourcePath"
 
 ## Assumptions and Limitations
 
-- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suit - testing performed as the project is built.
+- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suite - testing performed as the project is built.
 - Following the description directly this is a one way sync - we're not concerned about there being "extra" files in the destination directory - if there are we leave them alone or overwrite them in the case of a conflict.
 - Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
     - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
-- Client and server are on the same localhost - CORS could be a problem.
+- Client and server are on the same localhost - CORS could be a problem if they are not?
 - Some file editors will create temporary files in a directory when they are edited.
 
 ## Known Problems
@@ -108,5 +108,3 @@ Some notes I made during the development process
     2. Copy source directory to destination.
     3. Sync request to compare source to destination and ammend differences.
 - Large files (> available memory) may be problematic - research
-    
-- Empty directories???????????????????
