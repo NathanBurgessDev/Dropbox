@@ -19,14 +19,19 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
     # Check if the parent directory exists - if not then create it
-    destinationPath.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        destinationPath.parent.mkdir(parents=True, exist_ok=True)
 
-    with destinationPath.open("wb") as buffer:
-        shutil.copyfileobj(uploadFile.file, buffer)
+        with destinationPath.open("wb") as buffer:
+            shutil.copyfileobj(uploadFile.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
     return
 
 
+# As Windows does not differenciate between a file and a directory being deleted
+# We need to handle file and directory deletion in the same function
 def deleteFileOrDirectory(subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
@@ -41,11 +46,6 @@ def deleteFileOrDirectory(subPath: str, fullDestination: str):
         print("File does not exist: ", destinationPath)
 
     return
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 
 # FastAPI's `UploadFile` is very very useful as shown: https://fastapi.tiangolo.com/tutorial/request-files/#file-parameters-with-uploadfile
@@ -65,14 +65,16 @@ async def createUploadFileEndpoint(
     print(file)
     print(subPath)
     print(fullDestination)
+    try:
 
-    saveFile(file, subPath, fullDestination)
+        saveFile(file, subPath, fullDestination)
 
-    return {
-        "filename": file.filename,
-        "subPath": subPath,
-        "fullDestination": fullDestination,
-    }
+        return {
+            "message": f"File '{file.filename}' uploaded successfully",
+            "fullDestination": fullDestination,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed : {e}")
 
 
 @app.delete("/deletefile")

@@ -8,6 +8,8 @@
     - Moved
 - Startup Behaviour
     - Assumes empty source and destination directory
+- Supports empty directories
+- Pattern matching for file types not wanted to be tracked.
 
 ## Future Functionality to consider
 
@@ -20,14 +22,24 @@
 - `FastAPI` with `Uvicorn` - handles async, deployment is easier with the ASGI from uvicorn - should allow for easier scaling as a result.
 - `Watchdog` https://pypi.org/project/watchdog/ for directory monitoring.
     - Creates an observer thread that fires when various directory changes occur
-- `httpx` - as `requests` is a synchronous library.
-    - If we were to add API calls to `server.py`, `httpx` would need to be used - it would be sensible to use the same tooling for both client and server where possible.
-    - This is subject to httpx being a pain to use or not
+- `httpx` 
     - Shared `httpx` client to prevent creation of new connections
 
 ## Usage Guide
 
+- Designed to be Linux + Windows compatabale 
+    - Suggested to use Windows
+    - Linux compatability not tested
+- `CD` into the top level directory
+    - i.e. ...\DropBox
+
 ### Environment
+
+Please ensure you have `(venv)[https://docs.python.org/3/library/venv.html]` installed and follow the instructions to create and activate your environment depending on your OS and terminal of choice.
+
+When the environment has been activated donwload the requirements from the provided `requirements.txt`
+
+``` pip install -r requirements.txt ```
 
 ### Server
 
@@ -55,7 +67,19 @@ python -m client.client -path "sourcePath"
 - Some file editors will create temporary files in a directory when they are edited.
 
 ## Known Problems
-- Windows reports directory deletion as file deletion??????
+
+All known problems have had fixes applied where applicable - but describe odd / non-intuitive behaviour and are logged here for maintainability.
+
+- `Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.`
+    - On a windows implementation the `deleteFileEndpoint` is called for both file and directory deletion
+    - File and directory deletion is still functional and a description of the fix applied is available in the code.
+- Large files create a temp version to be streamed to prevent a time of check to time of use race condition.
+- When renaming a directory this also renames all sub-directories and files
+    - This will fire an `on_moved` event for **all** sub-directories / files
+    - As the parent directory is renamed on the server first - all sub-directories / files will also be renamed (as it updates their full path)
+    - However the `on_moved` events will still make a server request
+    - As the sub-directores / files will have already been renamed on the server when the parent directory was renamed.
+    - The requests to re-name the server side sub-directories / files will return 404.
 
 ## Notes / Thought Process
 

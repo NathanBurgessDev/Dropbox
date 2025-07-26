@@ -63,9 +63,6 @@ class MyEventHandler(PatternMatchingEventHandler):
             print(f"Error sending file: {e}")
         return
 
-    # def on_any_event(self, event: FileSystemEvent) -> None:
-    #     print(event)
-
     # Despite being called "on_moved" this refers to when a file is *renamed*
     def on_moved(self, event):
         if not (event.is_directory):
