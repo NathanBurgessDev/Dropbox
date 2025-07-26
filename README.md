@@ -70,7 +70,7 @@ python -m client.client -path "sourcePath"
 
 All known problems have had fixes applied where applicable - but describe odd / non-intuitive behaviour and are logged here for maintainability.
 
-- `Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.`
+- `"Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event."` [Watchdog docs](https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats)
     - On a windows implementation the `deleteFileEndpoint` is called for both file and directory deletion
     - File and directory deletion is still functional and a description of the fix applied is available in the code.
 - Large files create a temp version to be streamed to prevent a time of check to time of use race condition.
