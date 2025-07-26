@@ -5,7 +5,7 @@
     - Added
     - Deleted
     - Updated
-    - Moved
+    - Renamed / moved
 - Startup Behaviour
     - Assumes empty source and destination directory
 - Supports empty directories
@@ -39,7 +39,9 @@ Please ensure you have `(venv)[https://docs.python.org/3/library/venv.html]` ins
 
 When the environment has been activated donwload the requirements from the provided `requirements.txt`
 
-``` pip install -r requirements.txt ```
+```
+ pip install -r requirements.txt
+```
 
 ### Server
 
@@ -52,6 +54,10 @@ python -m server.server -path "destinationPath"
 ```
 
 ### Client
+
+The client will accept a directory path supplied after the `-path` flag.
+
+The file is located at `client/client.py`.
 
 ```
 python -m client.client -path "sourcePath"
