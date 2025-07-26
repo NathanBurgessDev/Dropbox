@@ -15,6 +15,7 @@
 
 - Logging
 - API key validation
+- Async for HTTP requests
 
 
 ## How it was built
