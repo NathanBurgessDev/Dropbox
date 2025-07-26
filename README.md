@@ -19,7 +19,7 @@
 
 ## How it was built
 
-- `FastAPI` with `Uvicorn` - handles async, deployment is easier with the ASGI from uvicorn - should allow for easier scaling as a result.
+- `FastAPI` with `Uvicorn` - handles async, deployment is easier with the ASGI from uvicorn.
 - `Watchdog` https://pypi.org/project/watchdog/ for directory monitoring.
     - Creates an observer thread that fires when various directory changes occur
 - `httpx` 
