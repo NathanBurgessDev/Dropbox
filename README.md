@@ -88,15 +88,6 @@ Documentation is available within the code with docstrings and comments.
 
 FastAPI also provides an interactive API documentation by default at `http://localhost:8000/docs` when the server is running.
 
-## Assumptions and Limitations
-
-- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suite - testing performed as the project is built.
-- Following the description directly this is a one way sync - we're not concerned about there being "extra" files in the destination directory - if there are we leave them alone or overwrite them in the case of a conflict.
-- Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
-    - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
-- Client and server are on the same localhost - CORS could be a problem if they are not?
-- Some file editors will create temporary files in a directory when they are edited.
-
 ## Known Problems
 
 All known problems have had fixes applied where applicable - but describe odd / non-intuitive behaviour and are logged here for maintainability.
@@ -124,15 +115,21 @@ Where applicable parts of the code relevent to the problem have been labelled wi
   - 
 ## Notes / Thought Process
 
+Some notes I made during the development process - I have elected to keep them here to provide insight into my thought process and to guide future development.
+
 - First time using FastAPI - bit of a learning curve.
 - Little and often approach
 - Keep it lean - stick to the brief - stick to the suggested time 
 - Don't re-invent the wheel
 
+## Assumptions and potential ideas
 
-### Potential Ideas
-
-Some notes I made during the development process - I have elected to keep them here to provide insight into my though process and to guide future development.
+- Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suite - testing performed as the project is built.
+- Following the description directly this is a one way sync - we're not concerned about there being "extra" files in the destination directory - if there are we leave them alone or overwrite them in the case of a conflict.
+- Under the same logic if I remove something from the destination directory I **do not** expect it to be replaced unless an update or change is triggered in the **source directory**. "Monitor changes in the source directory to syncrhonise changes **to** the destination directory"
+    - Could be solved with a "sync" request to the server - Compare os.stats? However Out Of Scope and previously mentioned
+- Client and server are on the same localhost - CORS could be a problem if they are not?
+- Some file editors will create temporary files in a directory when they are edited.
 
 - os.lisdir / os.stats for monitoring (slow + expensive call)
 - Comparing a hash of all values within the source directory to a cached copy (slow)
