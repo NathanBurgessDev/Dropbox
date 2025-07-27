@@ -118,7 +118,14 @@ class MyEventHandler(PatternMatchingEventHandler):
         - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\*bar*\\New Text Document.txt
 
         Makes a PUT request to the server to rename the file or directory
-        
+
+        Behaviour of note:
+        - When renaming a directory this also renames all sub-directories and files
+            - This will fire an `on_moved` event for **all** sub-directories / files
+            - As the parent directory is renamed on the server first - all sub-directories / files will also be renamed (as it updates their full path)
+            - However the `on_moved` events will still make a server request
+            - As the sub-directores / files will have already been renamed on the server when the parent directory was renamed.
+            - The requests to re-name the server side sub-directories / files will return 404.
     '''
     # Despite being called "on_moved" this refers to when a file is *renamed* or its directory changes
     def on_moved(self, event):
@@ -162,6 +169,14 @@ class MyEventHandler(PatternMatchingEventHandler):
 
         return super().on_moved(event)
 
+
+    '''
+        Watchdog event handler method
+        Specific documenation for this method is available in the official watchdog documentation
+
+        Triggers when a file or directory is created
+        Makes a POST request to the server to create the file or directory
+    '''
     def on_created(self, event):
         if not (event.is_directory):
             print("FILE CREATED ")
@@ -184,6 +199,14 @@ class MyEventHandler(PatternMatchingEventHandler):
                 print(f"Error sending directory creation request: {e}")
         return super().on_created(event)
 
+
+    '''
+    Watchdog event handler method
+    Specific documenation for this method is available in the official watchdog documentation
+
+    Triggers when a file or directory is deleted
+    Makes a DELETE request to the server to delete the file or directory
+    '''
     # Another interesting bug - this time windows related
     # Windows does not differenciate between a file deletion and a directory deletion
     # It only uses FileDeletedEvent for both
@@ -213,7 +236,19 @@ class MyEventHandler(PatternMatchingEventHandler):
                 print(f"Error sending directory deletion request: {e}")
         return super().on_deleted(event)
 
-    # ignore DirModifiedEvent - can be fired with non changes
+
+
+    '''
+    Watchdog event handler method
+    Specific documenation for this method is available in the official watchdog documentation
+
+    Triggers when a file or directory is modified
+    Makes a POST request to the server to update the file or directory
+    
+    Note: We ignore directory modification events as they can fire spontaneously without any changes to be uploaded
+    It is possible this is due to metadata changes but as this is not documented in the watchdog documentation I am unsure
+
+    '''
     # Fun little race condition here:
     # As we are uploading the file in a chunked format we do a few things
     # 1. The file is opened *but not read into memory* this allows us to upload larger files
