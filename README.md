@@ -33,7 +33,7 @@
 ## Usage Guide
 
 - Designed to be Linux + Windows + MacOS compatible  
-  - However this was built and tested on Windows 10 and as such I suggest using it on Windows.
+  - However this was built and tested on Windows 10 and as such I suggest using it on Windows 10.
 - Built on version 1.13.5 of Python
 - `Cd` into the top level directory
   - i.e. ...\DropBox
