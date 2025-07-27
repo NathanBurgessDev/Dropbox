@@ -1,5 +1,6 @@
 
 # Dropbox
+A client server file mirroing system.
 
 ## Functionality
 
@@ -57,7 +58,7 @@ When the environment has been activated download the requirements from the provi
 
 ### Server
 
-The server will accept a directory path supplied after the `-path` flag.
+The server will accept a directory path supplied after the `-path` flag where the files + directories will be uploaded to.
 
 The file is located at `server/server.py`.
 
@@ -67,7 +68,7 @@ python -m server.server -path "destinationPath"
 
 ### Client
 
-The client will accept a directory path supplied after the `-path` flag.
+The client will accept a directory path supplied after the `-path` flag which will be monitored for file system events.
 
 The file is located at `client/client.py`.
 
@@ -135,6 +136,7 @@ Where applicable parts of the code relevent to the problem have been labelled wi
     - `.pdf`
   - Large directories (creates a large number of log messages)
 - Less robust testing done on MacOS and Windows 11 to check basic functionality.
+- Two user tests to confirm usage guide is explanatory
 - An example of a basic unit test is provided in [tests](https://github.com/NathanBurgessDev/Dropbox/tree/fb0ddc60913490dbaa593daf4940cb7b435dccc1/tests) to provide an example of how a more comprehensive test suite could be built.
 
 ## Notes / Thought Process
