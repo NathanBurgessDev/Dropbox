@@ -170,3 +170,5 @@ Some notes I made during the development process - I have elected to keep them h
     2. Copy source directory to destination.
     3. Sync request to compare source to destination and ammend differences.
 - Large files (> available memory) may be problematic - research
+
+Time Taken: 7-10 hours - Worked on this *very* intermittently for a week or so doing 20 minutes here and there hence the "little and often" approach.
