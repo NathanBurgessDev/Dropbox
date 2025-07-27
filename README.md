@@ -48,7 +48,7 @@ A client server file mirroring system.
 
 ### Environment
 
-Please ensure you have (venv)[https://docs.python.org/3/library/venv.html] installed and follow the instructions to create and activate your environment depending on your OS and terminal of choice.
+Please ensure you have [venv](https://docs.python.org/3/library/venv.html) installed and follow the instructions to create and activate your environment depending on your OS and terminal of choice.
 
 When the environment has been activated download the requirements from the provided `requirements.txt`
 
