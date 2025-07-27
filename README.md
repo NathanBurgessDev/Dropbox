@@ -13,7 +13,7 @@
 - Supports empty directories
 - Pattern matching for file types not wanted to be tracked.
 - Error handling for serverside requests
-  - Security in mind to not leak full server paths
+  - Care taken to not leak information about server paths
 - A quick unit test to demonstrate how a more comprehensive test suite would be built.
 
 ## Future Functionality to consider
