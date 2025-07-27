@@ -12,6 +12,8 @@
     - Assumes empty source and destination directory
 - Supports empty directories
 - Pattern matching for file types not wanted to be tracked.
+- Error handling for serverside requests
+  - Security in mind to not leak full server paths
 
 ## Future Functionality to consider
 
@@ -33,8 +35,14 @@
 - Designed to be Linux + Windows compatible  
     - Suggested to use Windows
     - Linux compatibility not tested
+- Built on version 1.13.5 of Python
 - `Cd` into the top level directory
     - i.e. ...\DropBox
+
+## Pre-requisites
+- Python 3.13.5
+- `pip` - Python package manager
+- `venv` - Python virtual environment
 
 ### Environment
 

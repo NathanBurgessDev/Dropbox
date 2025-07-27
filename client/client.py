@@ -22,6 +22,12 @@ class MyEventHandler(PatternMatchingEventHandler):
         self.topLevelDir = topLevelDirectory
         self.client = client
 
+    def logResponse(self, response: httpx.Response, action: str):
+        if response.status_code != 200:
+            print(f"[{action}] Error:  {response.status_code}, {response.text}")
+        else:
+            print(f"[{action}] Success: {response.status_code}, {response.text}")
+
     # https://github.com/syncthing/syncthing - A similar Open Source Project - creates a copy of the file and then uploads that
     def sendFile(self, dataPath, srcPath):
         try:
@@ -37,7 +43,7 @@ class MyEventHandler(PatternMatchingEventHandler):
                 r = self.client.post(
                     "http://localhost:8000/uploadfile", files=files, data=dataPath
                 )
-                print(r.status_code, r.text)
+                self.logResponse(r, "File Upload Small")
 
             # Large file >= 10_000 bytes —> stream it
             # To solve a race condition with streamed files where the file grows or shrinks during sending
@@ -55,15 +61,17 @@ class MyEventHandler(PatternMatchingEventHandler):
                     r = self.client.post(
                         "http://localhost:8000/uploadfile", files=files, data=dataPath
                     )
-                print(r.status_code, r.text)
+                self.logResponse(r, "File Upload Large")
 
                 tempCopyPath.unlink(missing_ok=True)
 
         except Exception as e:
             print(f"Error sending file: {e}")
-        return
+            return None
+        #  Return the HTTP response for further processing if needed
+        return r
 
-    # Despite being called "on_moved" this refers to when a file is *renamed*
+    # Despite being called "on_moved" this refers to when a file is *renamed* or its directory changes
     def on_moved(self, event):
         if not (event.is_directory):
             print("FILE MOVED")
@@ -77,8 +85,10 @@ class MyEventHandler(PatternMatchingEventHandler):
             }
 
             try:
-                r = self.client.put("http://localhost:8000/renamefile", data=data)
-                print(r.status_code, r.text)
+                r = self.client.put(
+                    "http://localhost:8000/renamefile", data=data
+                    )
+                self.logResponse(r, "File Rename / Move")
             except Exception as e:
                 print(f"Error sending rename request: {e}")
         else:
@@ -94,10 +104,10 @@ class MyEventHandler(PatternMatchingEventHandler):
             }
 
             try:
-                response = self.client.put(
+                r = self.client.put(
                     "http://localhost:8000/renamedirectory", data=data
                 )
-                print(response.status_code, response.text)
+                self.logResponse(r, "Directory Rename / Move")
             except Exception as e:
                 print(f"Error sending directory rename request: {e}")
 
@@ -107,9 +117,12 @@ class MyEventHandler(PatternMatchingEventHandler):
         if not (event.is_directory):
             print("FILE CREATED ")
             print(event)
-            destinationPath = stripPath(event.src_path, topLevelDir)
+            destinationPath = stripPath(event.src_path,self.topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
-            self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+             # Send the file to the server - logging handled in `sendFile`
+            success = self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+            if success is None:
+                print(f"Error uploading file: exception occurred or no response")
         else:
             print("DIRECTORY CREATED")
             print(event)
@@ -117,7 +130,7 @@ class MyEventHandler(PatternMatchingEventHandler):
             data = {"subPath": str(subPath)}
             try:
                 r = self.client.post("http://localhost:8000/createdirectory", data=data)
-                print(r.status_code, r.text)
+                self.logResponse(r, "Directory Creation")
             except Exception as e:
                 print(f"Error sending directory creation request: {e}")
         return super().on_created(event)
@@ -129,13 +142,16 @@ class MyEventHandler(PatternMatchingEventHandler):
     # from the watchdog documentation : Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.
     # Naturally this isnt included in the documentation of `on_deleted`
     def on_deleted(self, event):
-        destinationPath = stripPath(event.src_path, topLevelDir)
+        destinationPath = stripPath(event.src_path, self.topLevelDir)
         dataPath = {"subPath": str(destinationPath)}
         if not (event.is_directory):
             print("FILE DELETED ")
             print(event)
-            r = self.client.delete("http://localhost:8000/deletefile", params=dataPath)
-            print(r.text)
+            try:
+                r = self.client.delete("http://localhost:8000/deletefile", params=dataPath)
+                self.logResponse(r, "File Deletion")
+            except Exception as e:
+                print(f"Error sending file deletion request: {e}")
         else:
             print("DIRECTORY DELETED")
             print(event)
@@ -143,7 +159,7 @@ class MyEventHandler(PatternMatchingEventHandler):
                 r = self.client.delete(
                     "http://localhost:8000/deletedirectory", params=dataPath
                 )
-                print(r.status_code, r.text)
+                self.logResponse(r, "Directory Deletion")
             except Exception as e:
                 print(f"Error sending directory deletion request: {e}")
         return super().on_deleted(event)
@@ -166,9 +182,13 @@ class MyEventHandler(PatternMatchingEventHandler):
         if not (event.is_directory):
             print("FILE MODIFIED ")
             print(event)
-            destinationPath = stripPath(event.src_path, topLevelDir)
+            destinationPath = stripPath(event.src_path, self.topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
-            self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+            # Send the file to the server - logging handled in `sendFile`
+            success = self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+            if success is None:
+                print(f"Error uploading file: exception occurred or no response")
+
         return super().on_modified(event)
 
 

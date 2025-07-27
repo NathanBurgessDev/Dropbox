@@ -35,16 +35,18 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
 def deleteFileOrDirectory(subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
-    if os.path.exists(destinationPath):
+    if not destinationPath.exists():
+        raise HTTPException(status_code=404, detail=f"Path not found: {subPath}")
+    
+    try:
         if destinationPath.is_file():
-            os.remove(destinationPath)
+            destinationPath.unlink()
         elif destinationPath.is_dir():
             shutil.rmtree(destinationPath)
         else:
-            print("Unsupported file type for deletion:", destinationPath)
-    else:
-        print("File does not exist: ", destinationPath)
-
+            raise HTTPException(status_code=400, detail=f"Unsupported file type at: {subPath}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete '{subPath}': {e}")
     return
 
 
@@ -62,16 +64,12 @@ async def createUploadFileEndpoint(
     subPath: str = Form(...),
     fullDestination: str = Depends(getDestination),
 ):
-    print(file)
-    print(subPath)
-    print(fullDestination)
     try:
 
         saveFile(file, subPath, fullDestination)
 
         return {
             "message": f"File '{file.filename}' uploaded successfully",
-            "fullDestination": fullDestination,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed : {e}")
@@ -84,8 +82,7 @@ async def deleteFileEndpoint(
 ):
     deleteFileOrDirectory(subPath, fullDestination)
     return {
-        "subPath": subPath,
-        "fullDestination": fullDestination,
+        "message": f"File or directory deleted at '{subPath}'",
     }
 
 
@@ -102,14 +99,13 @@ async def deleteDirectoryEndpoint(
             shutil.rmtree(dirPath)
             return {
                 "message": f"Directory deleted at '{subPath}'",
-                "fullDestination": fullDestination,
             }
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Directory deletion failed: {e}"
             )
     else:
-        raise HTTPException(status_code=404, detail=f"Directory not found: {dirPath}")
+        raise HTTPException(status_code=404, detail=f"Directory not found: {subPath}")
 
 
 @app.put("/renamefile")
@@ -122,7 +118,7 @@ async def renameFileEndpoint(
     newPath = Path(fullDestination) / newSubPath
 
     if not oldPath.exists():
-        raise HTTPException(status_code=404, detail=f"Source file not found: {oldPath}")
+        raise HTTPException(status_code=404, detail=f"Source file not found: {oldSubPath}")
 
     # Create parent directories if needed
     newPath.parent.mkdir(parents=True, exist_ok=True)
@@ -130,9 +126,7 @@ async def renameFileEndpoint(
     try:
         shutil.move(str(oldPath), str(newPath))
         return {
-            "oldPath": oldPath,
-            "newPath": newPath,
-            "fullDestination": fullDestination,
+            "message": f"File renamed from '{oldSubPath}' to '{newSubPath}'",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rename failed: {e}")
@@ -149,16 +143,14 @@ async def renameDirectoryEndpoint(
 
     if not oldDirPath.exists() or not oldDirPath.is_dir():
         raise HTTPException(
-            status_code=404, detail=f"Source directory not found: {oldDirPath}"
+            status_code=404, detail=f"Source directory not found: {oldSubPath}"
         )
 
     try:
         newDirPath.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(oldDirPath), str(newDirPath))
         return {
-            "oldDirPath": oldDirPath,
-            "newDirPath": newDirPath,
-            "fullDestination": fullDestination,
+            "message": f"Directory renamed from '{oldSubPath}' to '{newSubPath}'",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Directory rename failed: {e}")
@@ -174,18 +166,17 @@ async def createDirectoryEndpoint(
     try:
         if dirPath.exists():
             if dirPath.is_dir():
-                return {"message": f"Directory already exists: {dirPath}"}
+                return {"message": f"Directory already exists: {subPath}"}
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"A file exists at the directory path: {dirPath}",
+                    detail=f"A file exists at the directory path: {subPath}",
                 )
 
         dirPath.mkdir(parents=True, exist_ok=False)
 
         return {
             "message": f"Directory created at '{subPath}'",
-            "fullDestination": fullDestination,
         }
 
     except Exception as e:
