@@ -127,7 +127,7 @@ class MyEventHandler(PatternMatchingEventHandler):
         Makes a PUT request to the server to rename the file or directory
 
         Behaviour of note:
-        - When renaming a directory this also renames all sub-directories and files
+        - High Level Directory Rename Behavior: When renaming a directory this also renames all sub-directories and files
             - This will fire an `on_moved` event for **all** sub-directories / files
             - As the parent directory is renamed on the server first - all sub-directories / files will also be renamed (as it updates their full path)
             - However the `on_moved` events will still make a server request
@@ -145,7 +145,6 @@ class MyEventHandler(PatternMatchingEventHandler):
             "oldSubPath": str(oldPath),
             "newSubPath": str(newPath),
         }
-
 
         if not (event.is_directory):
             print("FILE MOVED")

@@ -33,7 +33,7 @@
 ## Usage Guide
 
 - Designed to be Linux + Windows compatible  
-  - However this was built and tested on Windows and as such I suggest using it on Windows.
+  - However this was built and tested on Windows 10 and as such I suggest using it on Windows.
 - Built on version 1.13.5 of Python
 - `Cd` into the top level directory
   - i.e. ...\DropBox
@@ -91,12 +91,13 @@ FastAPI also provides an interactive API documentation by default at `http://loc
 ## Known Problems
 
 All known problems have had fixes applied where applicable - but describe odd / non-intuitive behaviour and are logged here for maintainability.
+Where applicable parts of the code relevent to the problem have been labelled with the problem for ease of finding.
 
-- `"Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event."` [Watchdog docs](https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats)
+- **Windows Directory Rename API:** `"Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event."` [Watchdog docs](https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats)
     - On a windows implementation the `deleteFileEndpoint` is called for both file and directory deletion
     - File and directory deletion is still functional and a description of the fix applied is available in the code.
 - Large files create a temp version to be streamed to prevent a time of check to time of use race condition.
-- When renaming a directory this also renames all sub-directories and files
+- **High Level Directory Rename Behavior:** When renaming a directory this also renames all sub-directories and files
     - This will fire an `on_moved` event for **all** sub-directories / files
     - As the parent directory is renamed on the server first - all sub-directories / files will also be renamed (as it updates their full path)
     - However the `on_moved` events will still make a server request

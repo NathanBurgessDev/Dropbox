@@ -6,15 +6,24 @@ from dependencies.util import parseArguments
 # Globals - don't like this but FastAPI has forced my hand
 app: FastAPI = FastAPI()
 
-
-# Function to be overriden for dependency injection
-# Useful for testing
+'''
+Function to be overriden for dependency injection
+Useful for future testing and preventing global variables
+This will be used to provide the `fullDestination` variable to the FastAPI endpoints
+'''
 def getDestination():
     return
 
+'''
+    Saves the uploaded file to the specified subPath within the fullDestination directory.
+    Handles directory creation if it does not exist.
+    Input:
+        uploadFile: The file to be saved.
+        subPath: The path of the file or directory to be uploaded to relative to the monitored directory.
+        fullDestination: The full server path.
 
+'''
 # Potentially rework for async - not particularly familar with FastAPI in this format
-# Works for now
 def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
 
@@ -30,6 +39,14 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
     return
 
 
+'''
+    Deletes a file or directory at the specified subPath within the fullDestination directory.
+    Handles both file and directory deletion.
+    Input:
+        subPath: The path of the file or directory to be deleted relative to the monitored directory.
+        fullDestination: The full server path.
+'''
+# Windows Directory Rename API: 
 # As Windows does not differenciate between a file and a directory being deleted
 # We need to handle file and directory deletion in the same function
 def deleteFileOrDirectory(subPath: str, fullDestination: str):
@@ -50,6 +67,16 @@ def deleteFileOrDirectory(subPath: str, fullDestination: str):
     return
 
 
+
+'''
+    FastAPI endpoints for file operations.
+    These endpoints handle file uploads, deletions, renaming, and directory creation.
+    Each endpoint uses the `getDestination` dependency to get the full server path.
+    We override the `getDestination` function in the main block to inject the destination path.
+
+    FastAPI creates documentation for these endpoints automatically, which can be accessed at `/docs`.
+    To reduce redundancy I will avoid repeating docstrings for each endpoint and instead focus on noting any unique aspects or odd behaviors.
+'''
 # FastAPI's `UploadFile` is very very useful as shown: https://fastapi.tiangolo.com/tutorial/request-files/#file-parameters-with-uploadfile
 # For our case it uses a "spooled" file - this will store the file in memory up to a size limit, when this limit is passed it will be stored in disk.
 # This means we can upload large files without being concered about running out of memory.
@@ -117,6 +144,11 @@ async def renameFileEndpoint(
     oldPath = Path(fullDestination) / oldSubPath
     newPath = Path(fullDestination) / newSubPath
 
+    # High Level Directory Rename Behavior:
+    # Check if the old file exists - As referenced earlier this may raise frequently due to file movements from the client firing file renames 
+    # when the file's path is changed. This means when a high level directory is moved / renamed all subdirectories and files will fire but will be unable to be moved
+    # as the old path will not exist when we renamed the top level directory.
+    # If we were to handle this specifically this is where we would do it
     if not oldPath.exists():
         raise HTTPException(status_code=404, detail=f"Source file not found: {oldSubPath}")
 
@@ -131,7 +163,8 @@ async def renameFileEndpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rename failed: {e}")
 
-
+# Windows Directory Rename API: 
+# This endpoint will NEVER fire on a windows implementation
 @app.put("/renamedirectory")
 async def renameDirectoryEndpoint(
     oldSubPath: str = Form(...),
@@ -181,13 +214,6 @@ async def createDirectoryEndpoint(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Directory creation failed: {e}")
-
-
-# On Event is Deprecated - use Lifespan Event Handlers instead :
-# https://fastapi.tiangolo.com/advanced/events/
-# @app.on_event("startup")
-# async def startup_event():
-#     print("App Started")
 
 if __name__ == "__main__":
     # Parse arguments and perform some permissions / error checks
