@@ -37,6 +37,13 @@ class MyEventHandler(PatternMatchingEventHandler):
         self.topLevelDir = topLevelDirectory
         self.client = client
 
+
+    '''
+    Helper function to log HTTP responses
+    Logs the status code and response text for both success and error responses
+
+    Implemented for future extensibility for true Logging
+    '''
     def logResponse(self, response: httpx.Response, action: str):
         if response.status_code != 200:
             print(f"[{action}] Error:  {response.status_code}, {response.text}")
@@ -129,17 +136,20 @@ class MyEventHandler(PatternMatchingEventHandler):
     '''
     # Despite being called "on_moved" this refers to when a file is *renamed* or its directory changes
     def on_moved(self, event):
+
+        # strip the top level directory from the path to get the paths relative to the top level directory
+        oldPath = stripPath(event.src_path, self.topLevelDir)
+        newPath = stripPath(event.dest_path, self.topLevelDir)
+
+        data = {
+            "oldSubPath": str(oldPath),
+            "newSubPath": str(newPath),
+        }
+
+
         if not (event.is_directory):
             print("FILE MOVED")
             print(event)
-            oldPath = stripPath(event.src_path, self.topLevelDir)
-            newPath = stripPath(event.dest_path, self.topLevelDir)
-
-            data = {
-                "oldSubPath": str(oldPath),
-                "newSubPath": str(newPath),
-            }
-
             try:
                 r = self.client.put(
                     "http://localhost:8000/renamefile", data=data
@@ -150,15 +160,6 @@ class MyEventHandler(PatternMatchingEventHandler):
         else:
             print("DIRECTORY MOVED")
             print(event)
-
-            oldPath = stripPath(event.src_path, self.topLevelDir)
-            newPath = stripPath(event.dest_path, self.topLevelDir)
-
-            data = {
-                "oldSubPath": str(oldPath),
-                "newSubPath": str(newPath),
-            }
-
             try:
                 r = self.client.put(
                     "http://localhost:8000/renamedirectory", data=data
@@ -178,21 +179,23 @@ class MyEventHandler(PatternMatchingEventHandler):
         Makes a POST request to the server to create the file or directory
     '''
     def on_created(self, event):
+
+        # strip the top level directory from the path to get the path relative to the top level directory
+        subPath = stripPath(event.src_path, self.topLevelDir)
+        data = {"subPath": str(subPath)}
+
         if not (event.is_directory):
             print("FILE CREATED ")
             print(event)
-            destinationPath = stripPath(event.src_path,self.topLevelDir)
-            dataPath = {"subPath": str(destinationPath)}
-             # Send the file to the server - logging handled in `sendFile`
-            success = self.sendFile(dataPath=dataPath, srcPath=event.src_path)
+            # Send the file to the server - logging handled in `sendFile`
+            success = self.sendFile(dataPath=data, srcPath=event.src_path)
             if success is None:
                 print(f"Error uploading file: exception occurred or no response")
         else:
             print("DIRECTORY CREATED")
             print(event)
-            subPath = stripPath(event.src_path, self.topLevelDir)
-            data = {"subPath": str(subPath)}
             try:
+                # Send the file to the server - logging handled in `sendFile`
                 r = self.client.post("http://localhost:8000/createdirectory", data=data)
                 self.logResponse(r, "Directory Creation")
             except Exception as e:
@@ -214,8 +217,11 @@ class MyEventHandler(PatternMatchingEventHandler):
     # from the watchdog documentation : Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.
     # Naturally this isnt included in the documentation of `on_deleted`
     def on_deleted(self, event):
+
+        # strip the top level directory from the path to get the path relative to the top level directory
         destinationPath = stripPath(event.src_path, self.topLevelDir)
         dataPath = {"subPath": str(destinationPath)}
+
         if not (event.is_directory):
             print("FILE DELETED ")
             print(event)
@@ -266,6 +272,7 @@ class MyEventHandler(PatternMatchingEventHandler):
         if not (event.is_directory):
             print("FILE MODIFIED ")
             print(event)
+            # strip the top level directory from the path to get the path relative to the top level directory
             destinationPath = stripPath(event.src_path, self.topLevelDir)
             dataPath = {"subPath": str(destinationPath)}
             # Send the file to the server - logging handled in `sendFile`
@@ -276,24 +283,39 @@ class MyEventHandler(PatternMatchingEventHandler):
         return super().on_modified(event)
 
 
-if __name__ == "__main__":
 
+'''
+Main entry point for the client application
+
+Starts the Watchdog observer to listen for events
+Graceful shutdown on keyboard interrupt
+'''
+if __name__ == "__main__":
+    # Handles command line arguments to specify the directory to watch
     source = parseArguments()
     topLevelDir = Path(source).name
     print(topLevelDir)
 
     with httpx.Client() as client:
+        # Sets up the Watchdog event handler 
+        # Passes the top-level directory and HTTP client to the event handler
         event_handler = MyEventHandler(topLevelDirectory=topLevelDir, client=client)
+
+        # Create an Observer where we can schedule our Watchdog event handler to listen for file system events
         observer = Observer()
         observer.schedule(event_handler=event_handler, path=source, recursive=True)
         observer.start()
 
+        print("Press Ctrl+C to exit.")
+        # Keep the main thread alive to keep the observer thread running
+        #  Exit on keyboard interrupt
         try:
             while observer.is_alive():
                 time.sleep(1)
         except KeyboardInterrupt:
             print("KeyboardInterrupt received.")
             observer.stop()
+        
+        # Wait for the observer thread to exit and then exit gracefully
         observer.join()
-
         exit(0)
