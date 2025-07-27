@@ -118,11 +118,20 @@ class MyEventHandler(PatternMatchingEventHandler):
 
         Triggers when a file or directory is moved or renamed
         Moved refers to when a file full handle is changed
+
         for example:
+        
         From
         - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\*foo*\\New Text Document.txt
         to
         - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\*bar*\\New Text Document.txt
+
+        OR
+
+        From
+        - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\foo\\New Text Document.txt
+        to
+        - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\foo\\New Text Document Renamed.txt
 
         Makes a PUT request to the server to rename the file or directory
 
@@ -156,6 +165,8 @@ class MyEventHandler(PatternMatchingEventHandler):
                 self.logResponse(r, "File Rename / Move")
             except Exception as e:
                 print(f"Error sending rename request: {e}")
+        # High Level Directory Rename Behavior:
+        # Will never fire on a windows implementation
         else:
             print("DIRECTORY MOVED")
             print(event)

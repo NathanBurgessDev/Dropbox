@@ -32,7 +32,7 @@
 
 ## Usage Guide
 
-- Designed to be Linux + Windows compatible  
+- Designed to be Linux + Windows + MacOS compatible  
   - However this was built and tested on Windows 10 and as such I suggest using it on Windows.
 - Built on version 1.13.5 of Python
 - `Cd` into the top level directory
@@ -42,6 +42,7 @@
 - Python 3.13.5
 - `pip` - Python package manager
 - `venv` - Python virtual environment
+- Empty source and destination directories
 
 ### Environment
 
@@ -103,7 +104,14 @@ Where applicable parts of the code relevent to the problem have been labelled wi
     - However the `on_moved` events will still make a server request
     - As the sub-directores / files will have already been renamed on the server when the parent directory was renamed.
     - The requests to re-name the server side sub-directories / files will return 404.
-
+- Sometimes copying a file to the `source` directory will encounter a `[WinError 32] The process cannot access the file because it is being used by another process` error or `[Errno 13] Permission denied: "FILEPATH"`.
+  - So far through testing this will resolve itself on both Windows 10 and MacOS as the final `file modified` event will successfully access the file after the file is unlocked.
+  - However - on a Windows 11 implementation this final `file modified` event will *still* have the file locked and will return either a `[WinError 32] The process cannot access the file because it is being used by another process` or a `[Errno 13] Permission denied: "FILEPATH"`
+  - I suspect this is due to Windows creating the file handle - firing the `file created` event - and then writing to the file - firing the `file modified` event.
+  - Through testing on Windows 10 the final `file modified` event is fired *after* the file is unlocked and the file can be accessed.
+  - However on Windows 11 the final `file modified` event is fired *before* the file is unlocked and the file cannot be accessed.
+  - While a current fix for this has *not* been implemented - a proposed solution would be to add a retry mechanism on a permission denied error that will timeout after a certain number of attempts.
+  - This retry mechanism could be futher improved by allocating the retry attempts to a separate thread or providing async functionality to file upload. However this would require significant changes to the current implementation and is not within the scope of this project.
 ## Notes / Thought Process
 
 - First time using FastAPI - bit of a learning curve.
