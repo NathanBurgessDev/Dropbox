@@ -11,9 +11,14 @@ Event handler for file system events using watchdog
 Handles file and directory events such as creation, modification, deletion, and renaming.
 Uses a pattern matching event handler to ignore certain file types and directories.
 
-Uses httpx for making HTTP requests to a server running at "http://localhost:8000".
+Watchdog grabs file system events and calls the appropriate methods on the event handler.
+This should work for both Windows and Linux systems. However this was built and tested on Windows and as such I suggest using it on Windows.
+However there are limitations and caveats to be aware of which are documented in the README.md file as well as the watchdog documentation: https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats
+
+Uses httpx for making HTTP requests to a fastAPI server running at "http://localhost:8000". The code for the server is located as `server/server.py` file.
 
 Documentation for Watchdog: https://python-watchdog.readthedocs.io/en/stable/
+Documentation for httpx: https://www.python-httpx.org/
 '''
 class MyEventHandler(PatternMatchingEventHandler):
     def __init__(self, topLevelDirectory: str, client: httpx.Client):
@@ -43,7 +48,7 @@ class MyEventHandler(PatternMatchingEventHandler):
         Handles both small and large files
 
         Small files are read into memory and sent in one go
-        Large files are copied and streamed in chunks to avoid race conditions + memory issues
+        Large files are copied and streamed in chunks to avoid race conditions + memory issues. Streaming is done using httpx's default streaming capabilities.
 
         Input:
         - dataPath: Dictionary containing the subPath for the file
@@ -99,6 +104,22 @@ class MyEventHandler(PatternMatchingEventHandler):
         #  Return the HTTP response for further processing if needed
         return r
 
+
+    '''
+        Watchdog event handler method
+        Specific documenation for this method is available in the official watchdog documentation
+
+        Triggers when a file or directory is moved or renamed
+        Moved refers to when a file full handle is changed
+        for example:
+        From
+        - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\*foo*\\New Text Document.txt
+        to
+        - C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\*bar*\\New Text Document.txt
+
+        Makes a PUT request to the server to rename the file or directory
+        
+    '''
     # Despite being called "on_moved" this refers to when a file is *renamed* or its directory changes
     def on_moved(self, event):
         if not (event.is_directory):
