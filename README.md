@@ -132,7 +132,7 @@ Where applicable parts of the code relevent to the problem have been labelled wi
 
 ### Potential Ideas
 
-Some notes I made during the development process
+Some notes I made during the development process - I have elected to keep them here to provide insight into my though process and to guide future development.
 
 - os.lisdir / os.stats for monitoring (slow + expensive call)
 - Comparing a hash of all values within the source directory to a cached copy (slow)
