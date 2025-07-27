@@ -112,7 +112,31 @@ Where applicable parts of the code relevent to the problem have been labelled wi
   - While a current fix for this has *not* been implemented - a proposed solution would be to add a retry mechanism on a permission denied error that will timeout after a certain number of attempts to prevent an infinite loop if a file is truly locked or permission denied.
   - This retry mechanism could be futher improved by allocating the retry attempts to a separate thread or providing async functionality to file upload. However this would require significant changes to the current implementation and is not within the scope of this project.
   - It is also worth noting that the Windows 11 implementation this was tested on *did* have OneDrive enabled - it is possible that this is resulting in the file being locked for an extended period of time.
-  - 
+
+## Testing
+
+- Built primarily on Windows 10 and tested as produced.
+- Tested:
+  - Copying files
+  - Copying directories
+  - Renaming files
+  - Renaming directories
+  - Deleting files
+  - Deleting directories
+  - Moving files externally and internally
+  - Moving directories externally and internally
+  - Large files (> 1GB) and small files (< 1MB)
+  - Several file types including:
+    - `.txt`
+    - `.jpg`
+    - `.png`
+    - `.mp4`
+    - `.zip`
+    - `.pdf`
+  - Large directories (creates a large number of log messages)
+- Less robust testing done on MacOS and Windows 11 to check basic functionality.
+- An example of a basic unit test is provided in [tests](https://github.com/NathanBurgessDev/Dropbox/tree/fb0ddc60913490dbaa593daf4940cb7b435dccc1/tests) to provide an example of how a more comprehensive test suite could be built.
+
 ## Notes / Thought Process
 
 Some notes I made during the development process - I have elected to keep them here to provide insight into my thought process and to guide future development.

@@ -56,6 +56,7 @@ class MyEventHandler(PatternMatchingEventHandler):
 
         Small files are read into memory and sent in one go
         Large files are copied and streamed in chunks to avoid race conditions + memory issues. Streaming is done using httpx's default streaming capabilities.
+        Currently we consider files larger than 10_000 bytes to be large files. Whilst this is a rather small size it is good for testing purposes and can be adjusted later if needed.
 
         Input:
         - dataPath: Dictionary containing the subPath for the file
