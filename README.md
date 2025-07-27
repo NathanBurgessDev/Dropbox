@@ -74,6 +74,12 @@ The file is located at `client/client.py`.
 python -m client.client -path "sourcePath"
 ```
 
+### Documenation
+
+Documentation is available within the code with docstrings and comments.
+
+FastAPI also provides an interactive API documentation by default at `http://localhost:8000/docs` when the server is running.
+
 ## Assumptions and Limitations
 
 - Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suite - testing performed as the project is built.

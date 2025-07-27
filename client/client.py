@@ -5,6 +5,16 @@ from watchdog.observers import Observer
 from dependencies.util import parseArguments, stripPath
 
 
+
+'''
+Event handler for file system events using watchdog
+Handles file and directory events such as creation, modification, deletion, and renaming.
+Uses a pattern matching event handler to ignore certain file types and directories.
+
+Uses httpx for making HTTP requests to a server running at "http://localhost:8000".
+
+Documentation for Watchdog: https://python-watchdog.readthedocs.io/en/stable/
+'''
 class MyEventHandler(PatternMatchingEventHandler):
     def __init__(self, topLevelDirectory: str, client: httpx.Client):
         super().__init__(
@@ -28,8 +38,26 @@ class MyEventHandler(PatternMatchingEventHandler):
         else:
             print(f"[{action}] Success: {response.status_code}, {response.text}")
 
+    '''
+        Send file helper function
+        Handles both small and large files
+
+        Small files are read into memory and sent in one go
+        Large files are copied and streamed in chunks to avoid race conditions + memory issues
+
+        Input:
+        - dataPath: Dictionary containing the subPath for the file
+            - example: {"subPath": "foo/New Text Document.txt"}
+        - srcPath: String The full path to the source file to be sent 
+            - example: "C:\\Users\\Username\\Documents\\Projects\\DropBox\\source_test\\foo\\New Text Document.txt"#
+
+        Returns:
+        - HTTP response from the server
+        - None if an error occurs during the file sending process
+    '''
+
     # https://github.com/syncthing/syncthing - A similar Open Source Project - creates a copy of the file and then uploads that
-    def sendFile(self, dataPath, srcPath):
+    def sendFile(self, dataPath: dict, srcPath: str):
         try:
             fileSize = Path(srcPath).stat().st_size
             filename = Path(srcPath).name
