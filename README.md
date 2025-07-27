@@ -92,13 +92,13 @@ FastAPI also provides an interactive API documentation by default at `http://loc
 ## Known Problems
 
 All known problems have had fixes applied where applicable - but describe odd / non-intuitive behaviour and are logged here for maintainability.
-Where applicable parts of the code relevent to the problem have been labelled with the problem for ease of finding.
+Where applicable parts of the code relevent to the problem have been labelled with the problem for ease of maintainability.
 
-- **Windows Directory Rename API:** `"Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event."` [Watchdog docs](https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats)
+- **Windows Directory Rename API: - Fix Applied** `"Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event."` [Watchdog docs](https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats)
     - On a windows implementation the `deleteFileEndpoint` is called for both file and directory deletion
     - File and directory deletion is still functional and a description of the fix applied is available in the code.
-- Large files create a temp version to be streamed to prevent a time of check to time of use race condition.
-- **High Level Directory Rename Behavior:** When renaming a directory this also renames all sub-directories and files
+- Fix Applied - Large files create a temp version to be streamed to prevent a time of check to time of use race condition.
+- **High Level Directory Rename Behavior: - Fix Applied** When renaming a directory this also renames all sub-directories and files
     - This will fire an `on_moved` event for **all** sub-directories / files
     - As the parent directory is renamed on the server first - all sub-directories / files will also be renamed (as it updates their full path)
     - However the `on_moved` events will still make a server request
@@ -108,7 +108,7 @@ Where applicable parts of the code relevent to the problem have been labelled wi
   - So far through testing this will resolve itself on both Windows 10 and MacOS as the final `file modified` event will successfully access the file after the file is unlocked.
   - However - on a Windows 11 implementation this final `file modified` event will *still* have the file locked and will return either a `[WinError 32] The process cannot access the file because it is being used by another process` or a `[Errno 13] Permission denied: "FILEPATH"`
   - I suspect this is due to Windows creating the file handle - firing the `file created` event - and then writing to the file - firing the `file modified` event.
-  - Through testing on Windows 10 the final `file modified` event is fired *after* the file is unlocked and the file can be accessed and the problem does not occur.
+  - Through testing on both a Windows 10 Laptop and Desktop machine, the final `file modified` event is fired *after* the file is unlocked and the file can be accessed and the problem does not occur.
   - However on Windows 11 the final `file modified` event is fired *before* the file is unlocked and the file cannot be accessed.
   - While a current fix for this has *not* been implemented - a proposed solution would be to add a retry mechanism on a permission denied error that will timeout after a certain number of attempts to prevent an infinite loop if a file is truly locked or permission denied.
   - This retry mechanism could be futher improved by allocating the retry attempts to a separate thread or providing async functionality to file upload. However this would require significant changes to the current implementation and is not within the scope of this project.
