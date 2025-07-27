@@ -1,6 +1,6 @@
 
 # Dropbox
-A client server file mirroing system.
+A client server file mirroring system.
 
 ## Functionality
 
