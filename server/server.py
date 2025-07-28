@@ -47,7 +47,7 @@ def saveFile(uploadFile: UploadFile, subPath: str, fullDestination: str):
         fullDestination: The full server path.
 '''
 # Windows Directory Rename API: 
-# As Windows does not differenciate between a file and a directory being deleted
+# As Windows does not differentiate between a file and a directory being deleted
 # We need to handle file and directory deletion in the same function
 def deleteFileOrDirectory(subPath: str, fullDestination: str):
     destinationPath = Path(fullDestination) / subPath
@@ -79,7 +79,7 @@ def deleteFileOrDirectory(subPath: str, fullDestination: str):
 '''
 # FastAPI's `UploadFile` is very very useful as shown: https://fastapi.tiangolo.com/tutorial/request-files/#file-parameters-with-uploadfile
 # For our case it uses a "spooled" file - this will store the file in memory up to a size limit, when this limit is passed it will be stored in disk.
-# This means we can upload large files without being concered about running out of memory.
+# This means we can upload large files without being concerned about running out of memory.
 # we can use `shutil.copyfileobj` to write the file - this is better than using the default `.write` as it will copy in chunks, allowing the copying of files larger than available memory.
 # It also saves us from needing to do the chunking manually
 # https://stackoverflow.com/questions/63580229/how-to-save-uploadfile-in-fastapi
@@ -113,7 +113,7 @@ async def deleteFileEndpoint(
     }
 
 
-# On a windows implementation this will never be called due to Windows not differenciating between a deleted directory or a deleted file
+# On a Windows implementation this will never be called due to Windows not differentiating between a deleted directory or a deleted file
 @app.delete("/deletedirectory")
 async def deleteDirectoryEndpoint(
     subPath: str = Query(...),
@@ -164,7 +164,7 @@ async def renameFileEndpoint(
         raise HTTPException(status_code=500, detail=f"Rename failed: {e}")
 
 # Windows Directory Rename API: 
-# This endpoint will NEVER fire on a windows implementation
+# This endpoint will NEVER fire on a Windows implementation
 @app.put("/renamedirectory")
 async def renameDirectoryEndpoint(
     oldSubPath: str = Form(...),

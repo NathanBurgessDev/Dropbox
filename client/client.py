@@ -222,7 +222,7 @@ class MyEventHandler(PatternMatchingEventHandler):
     Makes a DELETE request to the server to delete the file or directory
     '''
     # Another interesting bug - this time windows related
-    # Windows does not differenciate between a file deletion and a directory deletion
+    # Windows does not differentiate between a file deletion and a directory deletion
     # It only uses FileDeletedEvent for both
     # https://python-watchdog.readthedocs.io/en/stable/installation.html#supported-platforms-and-caveats
     # from the watchdog documentation : Since the Windows API does not provide information about whether an object is a file or a directory, delete events for directories may be reported as a file deleted event.

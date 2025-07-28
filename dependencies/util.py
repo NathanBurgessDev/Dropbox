@@ -23,7 +23,7 @@ def parseArguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("-path")
 
-    # Input sanitation??????
+
     args = parser.parse_args()
 
     directoryPath = args.path

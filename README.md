@@ -36,7 +36,7 @@
 - Designed to be Linux + Windows + MacOS compatible  
   - However this was built and tested on Windows 10 and as such I suggest using it on Windows 10.
 - Built on version 1.13.5 of Python
-- `Cd` into the top level directory
+- `cd` into the top level directory
   - i.e. ...\DropBox
 
 ## Pre-requisites
@@ -146,7 +146,7 @@ Some notes I made during the development process - I have elected to keep them h
 - Keep it lean - stick to the brief - stick to the suggested time 
 - Don't re-invent the wheel
 
-## Assumptions and potential ideas
+### Assumptions and potential ideas
 
 - Keep it lean - suggested time is 3-4 hours - no bells and whistles - no formal testing suite - testing performed as the project is built.
 - Following the description directly this is a one way sync - we're not concerned about there being "extra" files in the destination directory - if there are we leave them alone or overwrite them in the case of a conflict.
